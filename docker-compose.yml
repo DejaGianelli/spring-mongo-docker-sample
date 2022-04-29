@@ -1,0 +1,43 @@
+version: "3.7"
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATA_MONGODB_USERNAME: user
+      SPRING_DATA_MONGODB_PASSWORD: 1234
+      SPRING_DATA_MONGODB_HOST: mongo
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: sample-db
+      SPRING_DATA_MONGODB_COLLECTION: sample_collection
+      JVM_OPT: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n
+    networks:
+      - sample-network
+
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_DATABASE=sample-db
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    volumes:
+      - type: bind
+        source: ./.docker/docker-entrypoint-initdb.d/mongo-init.js
+        target: /docker-entrypoint-initdb.d/mongo-init.js
+    ports:
+      - "27017:27017"
+    restart: always
+    networks:
+      - sample-network
+
+networks:
+  sample-network:
